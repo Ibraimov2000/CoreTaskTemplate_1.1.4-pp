@@ -1,89 +1,99 @@
 package jm.task.core.jdbc.dao;
 
-import jdk.javadoc.internal.doclint.Env;
-import jm.task.core.jdbc.Main;
 import jm.task.core.jdbc.model.User;
 import jm.task.core.jdbc.util.Util;
-import org.hibernate.Query;
+import org.hibernate.HibernateException;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
+import org.hibernate.SessionException;
 import org.hibernate.Transaction;
-import org.hibernate.cfg.Configuration;
-import org.hibernate.cfg.Environment;
+import org.hibernate.tool.schema.spi.CommandAcceptanceException;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import java.sql.*;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Properties;
 
 public class UserDaoHibernateImpl implements UserDao {
-    Properties properties;
-    Configuration configuration;
-    SessionFactory factory;
-    Session session;
 
     public UserDaoHibernateImpl() {
     }
 
     @Override
-    public void createUsersTable() throws SQLException {
-        properties = new Properties();
-        properties.setProperty(Environment.DIALECT, "org.hibernate.dialect.MySQL5Dialect");
-        properties.setProperty(Environment.HBM2DDL_AUTO, "update");
-        properties.setProperty(Environment.DRIVER, "com.mysql.jdbc.Driver");
-        properties.setProperty(Environment.USER, "root");
-        properties.setProperty(Environment.PASS, "1111");
-        properties.setProperty(Environment.URL, "jdbc:mysql://localhost:3306/my_first_db");
-
-        configuration = new Configuration();
-        configuration.setProperties(properties);
-
-        configuration.addAnnotatedClass(User.class);
-    }
-
-    @Override
-    public void dropUsersTable() throws SQLException {
-    }
-
-    @Override
-    public void saveUser(String name, String lastName, byte age) throws SQLException {
-        factory = configuration.buildSessionFactory();
-        session = factory.openSession();
-        Transaction transaction = session.beginTransaction();
-        User user = new User("Mirseit", "Ibraimov", (byte) 21);
-        session.persist(user);
-        System.out.println("User saved!");
-        transaction.commit();
-        session.close();
-    }
-
-    @Override
-    public void removeUserById(long id) throws SQLException {
-        session = factory.openSession();
-        Transaction transaction = session.beginTransaction();
-        Query deleteQuery = session.createQuery("delete from User e where e.id=?id");
-        transaction.commit();
-        session.close();
-    }
-
-    @Override
-    public List<User> getAllUsers() throws SQLException {
-        factory = configuration.buildSessionFactory();
-        session = factory.openSession();
-        Query query = session.createQuery("select e from User e");
-        List<User> list = query.list();
-        for(User use:list) {
-            use.toString();
+    public void createUsersTable() {
+        try (Session session = Util.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            session.createSQLQuery("CREATE TABLE IF NOT EXISTS User(id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name nvarchar(20) NOT NULL, lastName nvarchar(20) NOT NULL, age smallint NOT NULL)").executeUpdate();
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
         }
-        session.close();
-        return list;
+    }
+
+    @Override
+    public void dropUsersTable() {
+        try (Session session = Util.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            session.createSQLQuery("DROP TABLE IF EXISTS User").executeUpdate();
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public void saveUser(String name, String lastName, byte age) {
+        User user = new User(name, lastName, age);
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.getTransaction();
+            session.save(user);
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
+    }
+
+    @Override
+    public void removeUserById(long id) {
+        try (Session session = Util.getSessionFactory().openSession()){
+            Transaction transaction = session.beginTransaction();
+            User user = session.get(User.class, id);
+            session.delete(user);
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Override
+    public List<User> getAllUsers() {
+        List<User> users = new ArrayList<>();
+        Transaction transaction = null;
+        try (Session session = Util.getSessionFactory().openSession()) {
+            transaction = session.getTransaction();
+            users = (List<User>) session.createQuery("FROM User").list();
+            transaction.commit();
+        } catch (Exception e) {
+            if (transaction != null) {
+                transaction.rollback();
+            }
+        }
+        return users;
     }
 
     @Override
     public void cleanUsersTable() {
-
+        try (Session session = Util.getSessionFactory().openSession()) {
+            Transaction transaction = session.beginTransaction();
+            session.createSQLQuery("TRUNCATE table User").executeUpdate();
+            transaction.commit();
+            session.close();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
