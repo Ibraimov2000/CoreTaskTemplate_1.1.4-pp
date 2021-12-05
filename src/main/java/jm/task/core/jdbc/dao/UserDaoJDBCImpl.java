@@ -19,9 +19,6 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = Util.getConnection().createStatement()) {
             statement.executeUpdate("CREATE TABLE IF NOT EXISTS users(id INT PRIMARY KEY AUTO_INCREMENT NOT NULL, name nvarchar(20) NOT NULL, lastName nvarchar(20) NOT NULL, age smallint NOT NULL)");
             System.out.println("Таблица успешно создана!");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("Драйвер не найден!");
         } catch (SQLException exception) {
             exception.printStackTrace();
             System.out.println(exception.getMessage());
@@ -33,9 +30,6 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = Util.getConnection().createStatement()) {
             statement.executeUpdate("DROP TABLE IF EXISTS users");
             System.out.println("Таблица успешно удалена!");
-        } catch(ClassNotFoundException exception) {
-            exception.printStackTrace();
-            System.out.println("Драйвер не найден!!");
         } catch(SQLException e) {
             e.printStackTrace();
             System.out.println(e.getMessage());
@@ -49,9 +43,6 @@ public class UserDaoJDBCImpl implements UserDao {
             preparedStatement.setByte(3,age);
             preparedStatement.executeUpdate();
             System.out.println("User с именем – " + name + " добавлен в базу данных )");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("Драйвер не найден!!");
         } catch (SQLException exception) {
             exception.printStackTrace();
             System.out.println(exception.getMessage());
@@ -63,9 +54,6 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = Util.getConnection().createStatement()) {
             statement.executeUpdate("DELETE FROM  users WHERE id = " + id);
             System.out.println("Пользователь под номером " + id + " успешно удален!");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("Драйвер не найден!!");
         } catch (SQLException exception) {
             System.out.println("Произошла ошибка при удалении пользователя!");
         }
@@ -87,9 +75,6 @@ public class UserDaoJDBCImpl implements UserDao {
         } catch (SQLException exception) {
             System.out.println("Произошла ошибка при выборе всех пользователей таблицы!");
             ;
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("Драйвер не найден!");
         }
         return users;
     }
@@ -98,9 +83,6 @@ public class UserDaoJDBCImpl implements UserDao {
         try (Statement statement = Util.getConnection().createStatement()) {
             statement.executeUpdate("TRUNCATE table users");
             System.out.println("Таблица успешно очищена!");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            System.out.println("Driver was not found!");
         } catch (SQLException exception) {
             exception.printStackTrace();
             System.out.println(exception.getMessage());
